@@ -15,5 +15,5 @@ app.use(cors());
 app.use(usersRouter);
 app.use(postsRouter);
 
-const PORT = process.env.PORT || 5008;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log('Servidor rodou deboas'));

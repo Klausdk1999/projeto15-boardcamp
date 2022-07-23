@@ -1,13 +1,14 @@
-import pkg from 'pg';
+import pg from 'pg';
 
-const { Pool } = pkg;
+const { Pool } = pg;
 
-const connection = new Pool({
-  host: '192.168.0.104',
-  port: 5432,
-  user: 'postgres',
-  password: 'admin',
-  database: 'meu_banco'
-});
+const databaseConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
+}
+
+const connection = new Pool(databaseConfig);
 
 export default connection;
