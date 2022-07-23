@@ -1,29 +1,29 @@
 import connection from '../dbStrategy/postgres.js';
 import joi from 'joi';
 
-export async function getCategories(req, res) {
-  const { rows: categories } = await connection.query(`
-    SELECT categories.id, categories.name FROM categories
+export async function getRentals(req, res) {
+  const { rows: rentals } = await connection.query(`
+    SELECT * FROM rentals
   `);
 
-  res.send(categories);
+  res.send(rentals);
 }
 
-export async function createCategorie(req, res) {
-  const newCategorie = req.body;
+export async function createRental(req, res) {
+  const newRental = req.body;
 
-  const categorieSchema = joi.object({
-    name: joi.string().required()
-  });
+//   const rentalschema = joi.object({
+//     name: joi.string().required()
+//   });
 
-  const { error } = categorieSchema.validate(newPost);
+//   const { error } = rentalschema.validate(newRental);
 
-  if (error) {
-    return res.sendStatus(422);
-  }
+//   if (error) {
+//     return res.sendStatus(422);
+//   }
 
   await connection.query(
-    `INSERT INTO categories (name) VALUES ('${newCategorie.name}')`
+    `INSERT INTO rentals (customerId,gameId,rentDate,daysRented,returnDate,originalPrice,delayFee) VALUES ('${newRental.customerId}','${newRental.gameId}','${newRental.rentDate}','${newRental.daysRented}','${newRental.returnDate}','${newRental.originalPrice}','${newRental.delayFee}')`
   );
 
   res.status(201).send('Categoria criada com sucesso');
