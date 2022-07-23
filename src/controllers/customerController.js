@@ -17,7 +17,7 @@ export async function createCategorie(req, res) {
     name: joi.string().required()
   });
 
-  const { error } = categorieSchema.validate(newCategorie);
+  const { error } = categorieSchema.validate(newPost);
 
   if (error) {
     return res.sendStatus(422);
