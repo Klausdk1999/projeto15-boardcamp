@@ -1,31 +1,39 @@
 import connection from '../dbStrategy/postgres.js';
 import joi from 'joi';
 
-export async function getCategories(req, res) {
-  const { rows: categories } = await connection.query(`
-    SELECT categories.id, categories.name FROM categories
+export async function getCustomers(req, res) {
+  const { rows: customers } = await connection.query(`
+    SELECT * FROM customers
   `);
 
-  res.send(categories);
+  res.send(customers);
 }
 
+// export async function getCustomers(req, res) {
+//     const { rows: customers } = await connection.query(`
+//       SELECT * FROM customers
+//     `);
+  
+//     res.send(customers);
+// }
+  
 
-export async function createCategorie(req, res) {
-  const newCategorie = req.body;
+export async function createCustomer(req, res) {
+  const newCustomer = req.body;
 
-  const categorieSchema = joi.object({
+  const customerschema = joi.object({
     name: joi.string().required()
   });
 
-  const { error } = categorieSchema.validate(newPost);
+  const { error } = customerschema.validate(newCustomer);
 
   if (error) {
     return res.sendStatus(422);
   }
 
   await connection.query(
-    `INSERT INTO categories (name) VALUES ('${newCategorie.name}')`
+    `INSERT INTO customers (name,phone,cpf,birthday) VALUES ('${newCustomer.name}','${newCustomer.phone}','${newCustomer.cpf}','${newCustomer.birthday}')`
   );
 
-  res.status(201).send('Categoria criada com sucesso');
+  res.status(201).send('Cliente criado com sucesso');
 }

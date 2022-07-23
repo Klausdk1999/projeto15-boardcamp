@@ -9,8 +9,12 @@ const databaseConfig = {
     }
 }
 
-const connection = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+const connection = new Pool(databaseConfig);
 
 export default connection;
+
+// const connection = new Pool({
+//   connectionString: process.env.DATABASE_URL,
+// });
+
+// export default connection;

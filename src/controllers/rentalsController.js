@@ -9,7 +9,6 @@ export async function getCategories(req, res) {
   res.send(categories);
 }
 
-
 export async function createCategorie(req, res) {
   const newCategorie = req.body;
 
