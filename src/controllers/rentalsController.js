@@ -9,20 +9,14 @@ const rentalsSchema = joi.object({
 });
 
 export async function getRentals(req, res) {
-  const { customerId, gameId, offset, limit, order } = req.query;
+  const { customerId, gameId } = req.query;
   let paramsClause = "";
-  let orderClause = "";
-  let offsetClause = "";
-  let limitClause = "";
 
   try {
     customerId
       ? (paramsClause = `WHERE rentals."customerId" = ${customerId}`)
       : "";
     gameId ? (paramsClause = `WHERE rentals."gameId" = ${gameId}`) : "";
-    order ? (orderClause = `ORDER BY "${order}" ASC`) : "";
-    offset ? (offsetClause = `OFFSET ${offset}`) : "";
-    limit ? (limitClause = `LIMIT ${limit}`) : "";
 
     const { rows: rentals } = await connection.query(
       `
@@ -40,19 +34,9 @@ export async function getRentals(req, res) {
                 AS games
             ON games.id = rentals."gameId" 
         ${paramsClause}
-        ${orderClause}
-        ${offsetClause}
-        ${limitClause}
         `
     );
-    if (rentals.length !== 0) {
-      delete rentals[0].customer.phone;
-      delete rentals[0].customer.cpf;
-      delete rentals[0].customer.birthday;
-      delete rentals[0].game.image;
-      delete rentals[0].game.stockTotal;
-      delete rentals[0].game.pricePerDay;
-    }
+    
 
     return res.send(rentals);
   } catch (error) {
