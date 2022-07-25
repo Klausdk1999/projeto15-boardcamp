@@ -9,9 +9,7 @@ const rentalsSchema = joi.object({
 
 export async function getRentals(req, res) {
   
-  
   try {
-
     const result = await connection.query(`
         SELECT 
           rentals.*,
@@ -22,7 +20,7 @@ export async function getRentals(req, res) {
           JOIN customers ON customers.id=rentals."customerId"
           JOIN games ON games.id=rentals."gameId"
           JOIN categories ON categories.id=games."categoryId"
-      `);
+    `);
 
     res.send(result.rows);
   } catch (error) {
