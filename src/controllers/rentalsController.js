@@ -18,6 +18,11 @@ export async function getRentals(req, res) {
 export async function createRental(req, res) {
   const newRental = req.body;
 
+  const validation = rentalsSchema.validate(newRental);
+  if (validation.error) {
+    return res.sendStatus(400); // bad request
+  }
+
   await connection.query(
     `INSERT INTO rentals (customerId,gameId,rentDate,daysRented,returnDate,originalPrice,delayFee) VALUES ('${newRental.customerId}','${newRental.gameId}','${newRental.rentDate}','${newRental.daysRented}','${newRental.returnDate}','${newRental.originalPrice}','${newRental.delayFee}')`
   );

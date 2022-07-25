@@ -2,9 +2,6 @@ import connection from '../dbStrategy/postgres.js';
 import joi from 'joi';
 
 export async function getCategories(req, res) {
-  // const { rows: categories } = await connection.query(`
-  //   SELECT categories.id, categories.name FROM categories
-  // `);
 
   try {
     const { rows: categories } = await connection.query(`
@@ -19,7 +16,7 @@ export async function getCategories(req, res) {
 
 export async function createCategorie(req, res) {
 
-  newCategory = req.body;
+  const newCategory = req.body;
 
   const categorySchema = joi.object({
     name: joi.string().required()
