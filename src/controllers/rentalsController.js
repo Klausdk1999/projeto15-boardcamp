@@ -8,26 +8,9 @@ const rentalsSchema = joi.object({
 });
 
 export async function getRentals(req, res) {
-  const { customerId, gameId } = req.query;
-
+  
+  
   try {
-    const params = [];
-    const conditions = [];
-    let whereClause = '';
-
-    if (customerId) {
-      params.push(customerId);
-      conditions.push(`rentals."customerId" = $${params.length}`);
-    }
-
-    if (gameId) {
-      params.push(gameId);
-      conditions.push(`rentals."gameId"=$${params.length}`);
-    }
-
-    if (params.length > 0) {
-      whereClause += `WHERE ${conditions.join(" AND ")}`;
-    }
 
     const result = await connection.query(`
         SELECT 
@@ -39,9 +22,7 @@ export async function getRentals(req, res) {
           JOIN customers ON customers.id=rentals."customerId"
           JOIN games ON games.id=rentals."gameId"
           JOIN categories ON categories.id=games."categoryId"
-          WHERE rentals."gameId"=$1 AND rentals."customerId"=$2
-      `
-    ,[gameId,customerId]);
+      `);
 
     res.send(result.rows);
   } catch (error) {
