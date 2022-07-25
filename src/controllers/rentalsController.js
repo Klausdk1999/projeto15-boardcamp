@@ -1,5 +1,6 @@
 import connection from '../dbStrategy/postgres.js';
 import joi from 'joi';
+import dayjs from "dayjs";
 
 const rentalsSchema = joi.object({
   customerId: joi.number().required(),
@@ -8,21 +9,53 @@ const rentalsSchema = joi.object({
 });
 
 export async function getRentals(req, res) {
-  
-  try {
-    const result = await connection.query(`
-        SELECT 
-          rentals.*,
-          customers.name AS customer,
-          games.name,
-          categories.*
-        FROM rentals
-          JOIN customers ON customers.id=rentals."customerId"
-          JOIN games ON games.id=rentals."gameId"
-          JOIN categories ON categories.id=games."categoryId"
-      `);
+  const { customerId, gameId, offset, limit, order } = req.query;
+  let paramsClause = "";
+  let orderClause = "";
+  let offsetClause = "";
+  let limitClause = "";
 
-    res.send(result.rows);
+  try {
+    customerId
+      ? (paramsClause = `WHERE rentals."customerId" = ${customerId}`)
+      : "";
+    gameId ? (paramsClause = `WHERE rentals."gameId" = ${gameId}`) : "";
+    order ? (orderClause = `ORDER BY "${order}" ASC`) : "";
+    offset ? (offsetClause = `OFFSET ${offset}`) : "";
+    limit ? (limitClause = `LIMIT ${limit}`) : "";
+
+    const { rows: rentals } = await connection.query(
+      `
+        SELECT 
+            rentals.*, 
+            to_json(customers) "customer", 
+            to_json(games) "game"
+        FROM rentals 
+            INNER JOIN customers ON customers.id = rentals."customerId" 
+            INNER JOIN (SELECT 
+                    games.*, 
+                    categories.name as "categoryName" 
+                FROM games 
+                    JOIN categories ON games."categoryId" = categories.id) 
+                AS games
+            ON games.id = rentals."gameId" 
+        ${paramsClause}
+        ${orderClause}
+        ${offsetClause}
+        ${limitClause}
+           ;
+        `
+    );
+    if (rentals.length !== 0) {
+      delete rentals[0].customer.phone;
+      delete rentals[0].customer.cpf;
+      delete rentals[0].customer.birthday;
+      delete rentals[0].game.image;
+      delete rentals[0].game.stockTotal;
+      delete rentals[0].game.pricePerDay;
+    }
+
+    return res.send(rentals);
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
