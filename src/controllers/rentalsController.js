@@ -14,8 +14,7 @@ export async function getRentals(req, res) {
         SELECT 
           rentals.*,
           customers.name AS customer,
-          games.name,
-          categories.*
+          games.*
         FROM rentals
           JOIN customers ON customers.id=rentals."customerId"
           JOIN games ON games.id=rentals."gameId"
