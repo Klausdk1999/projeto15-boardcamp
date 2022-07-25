@@ -9,39 +9,65 @@ const rentalsSchema = joi.object({
 });
 
 export async function getRentals(req, res) {
-  const { customerId, gameId } = req.query;
-  let paramsClause = "";
+  const { customerId, gameId, offset, limit, order, desc, status, startDate } = req.query;
+  const orderBy = order ? `ORDER BY ${order} ${desc ? "DESC" : "ASC"}` : '';
+  let rentals = [];
+  let rentalStatus = '';
+  let rentalStartDate = '';
+  if (status === 'open') {
+      rentalStatus = `"returnDate" IS NULL`;
+  } else if (status === 'closed') {
+      rentalStatus = `"returnDate" IS NOT NULL`;
+  }
+  if (startDate && dayjs(startDate).format('YYYY-MM-DD') !== "Invalid Date") {
+      rentalStartDate = `"rentDate" >= '${dayjs(startDate).format('YYYY-MM-DD')}'`;
+  }
 
   try {
-    customerId
-      ? (paramsClause = `WHERE rentals."customerId" = ${customerId}`)
-      : "";
-    gameId ? (paramsClause = `WHERE rentals."gameId" = ${gameId}`) : "";
+      const query = `
+      SELECT rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", categories.name AS "categoryName" 
+      FROM rentals 
+      JOIN customers ON rentals."customerId" = customers.id 
+      JOIN games ON rentals."gameId" = games.id 
+      JOIN categories ON games."categoryId" = categories.id`;
 
-    const { rows: rentals } = await connection.query(
-      `
-        SELECT 
-            rentals.*, 
-            to_json(customers) "customer", 
-            to_json(games) "game"
-        FROM rentals 
-            INNER JOIN customers ON customers.id = rentals."customerId" 
-            INNER JOIN (SELECT 
-                    games.*, 
-                    categories.name as "categoryName" 
-                FROM games 
-                    JOIN categories ON games."categoryId" = categories.id) 
-                AS games
-            ON games.id = rentals."gameId" 
-        ${paramsClause}
-        `
-    );
-    
+      if (customerId) {
+          const and = rentalStatus ? 'AND' : '';
+          const and2 = rentalStartDate ? 'AND' : '';
+          const { rows } = await connection.query(`${query} WHERE "customerId" = $1 ${and} ${rentalStatus} ${and2} ${rentalStartDate} ${orderBy} LIMIT $2 OFFSET $3`, [customerId, limit, offset]);
+          rentals = [...rows];
+      } else if (gameId) {
+          const and = rentalStatus ? 'AND' : '';
+          const and2 = rentalStartDate ? 'AND' : '';
+          const { rows } = await connection.query(`${query} WHERE "gameId" = $1 ${and} ${rentalStatus} ${and2} ${rentalStartDate} ${orderBy} LIMIT $2 OFFSET $3`, [gameId, limit, offset]);
+          rentals = [...rows];
+      } else {
+          const where = rentalStatus || rentalStartDate ? 'WHERE' : '';
+          const and = rentalStatus && rentalStartDate ? 'AND' : '';
+          const { rows } = await connection.query(`${query} ${where} ${rentalStatus} ${and} ${rentalStartDate} ${orderBy} LIMIT $1 OFFSET $2`, [limit, offset]);
+          rentals = [...rows];
+      }
 
-    return res.send(rentals);
+      rentals.map(rental => {
+          rental.customer = {
+              id: rental.customerId,
+              name: rental.customerName
+          };
+          rental.game = {
+              id: rental.gameId,
+              name: rental.gameName,
+              categoryId: rental.categoryId,
+              categoryName: rental.categoryName
+          }
+          delete rental.customerName;
+          delete rental.gameName;
+          delete rental.categoryId;
+          delete rental.categoryName;
+      })
+      res.status(200).send(rentals);
+
   } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
+      res.status(500).send(error);
   }
 }
 
