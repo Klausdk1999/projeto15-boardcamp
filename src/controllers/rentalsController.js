@@ -43,7 +43,6 @@ export async function getRentals(req, res) {
         ${orderClause}
         ${offsetClause}
         ${limitClause}
-           ;
         `
     );
     if (rentals.length !== 0) {
