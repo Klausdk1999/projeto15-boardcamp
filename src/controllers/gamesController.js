@@ -1,31 +1,50 @@
 import connection from '../dbStrategy/postgres.js';
 import joi from 'joi';
 
+const gameSchema = joi.object({
+  name: joi.string().required(),
+  image: joi.string().uri().required(),
+  stockTotal: joi.string().required(),
+  categoryId: joi.number().required(),
+  pricePerDay: joi.string().required()
+});
+
 export async function getGames(req, res) {
-  const { rows: games } = await connection.query(`
-    SELECT * FROM games
-  `);
 
-  res.send(games);
+  try {
+    const result = await connection.query(`
+      SELECT games.*, categories.name AS "category" FROM games JOIN categories ON categories.id=games."categoryId"
+    `);
+
+    res.send(result.rows);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500); // internal server error
+  }
 }
-
 
 export async function createGame(req, res) {
-  const newGame = req.body;
+  const game = req.body;
 
-  const gameschema = joi.object({
-    name: joi.string().required()
-  });
-
-  const { error } = gameschema.validate(newGame);
-
-  if (error) {
-    return res.sendStatus(422);
+  const validation = gameSchema.validate(game);
+  if (validation.error) {
+    return res.sendStatus(400); // bad request
   }
 
-  await connection.query(
-    `INSERT INTO games (name,image,stockTotal,categoryId,pricePerDay) VALUES ('${newGame.name}','${newGame.image}','${newGame.stockTotal}','${newGame.categoryId}','${newGame.pricePerDay}')`
-  );
+  try {
+    const result = await connection.query('SELECT id FROM categories WHERE id = $1', [game.categoryId]);
+    if (result.rowCount === 0) {
+      return res.sendStatus(400); // bad request
+    }
 
-  res.status(201).send('Game criado com sucesso');
+    await connection.query(`
+      INSERT INTO games(name, image, "stockTotal", "categoryId", "pricePerDay") VALUES ($1, $2, $3, $4, $5);
+    `, [game.name, game.image, Number(game.stockTotal), game.categoryId, Number(game.pricePerDay)]);
+
+    res.sendStatus(201); // created
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500); // internal server error
+  }
 }
+
