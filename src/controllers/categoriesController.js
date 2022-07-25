@@ -31,12 +31,12 @@ export async function createCategorie(req, res) {
   }
 
   try {
-    const result = await db.query('SELECT id FROM categories WHERE name=$1',[newCategory.name]);
+    const result = await connection.query('SELECT id FROM categories WHERE name=$1',[newCategory.name]);
     if (result.rowCount > 0) {
       return res.sendStatus(409); // conflict
     }
 
-    await db.query(`INSERT INTO categories(name) VALUES ($1)`,[newCategory.name]);
+    await connection.query(`INSERT INTO categories(name) VALUES ($1)`,[newCategory.name]);
     res.sendStatus(201); // created
   } catch (error) {
     console.log(error);
