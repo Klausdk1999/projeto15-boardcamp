@@ -9,12 +9,11 @@ const customerSchema = joi.object({
 });
 
 export async function getCustomers(req, res) {
-  const { cpf } = req.query;
-
+ // 
   try {
     const result = await connection.query(`
-      SELECT * FROM customers WHERE cpf LIKE $1
-    `, [cpf]);
+      SELECT * FROM customers
+    `);
 
     res.send(result.rows);
 
